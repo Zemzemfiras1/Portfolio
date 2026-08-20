@@ -22,6 +22,22 @@
     <link rel="stylesheet" href="css/icomoon.css">
     <link rel="stylesheet" href="css/style.css">
   </head>
+  <script>
+    fetch('testimonials/testimonials.html')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Could not load testimonials');
+            }
+            return response.text();
+        })
+        .then(data => {
+            document.getElementById('testimonials-container').innerHTML = data;
+        })
+        .catch(error => {
+            console.error('Error loading testimonials:', error);
+        });
+  </script>
+
   <body data-spy="scroll" data-target=".site-navbar-target" data-offset="300">
 
 
@@ -39,9 +55,10 @@
 	          <li class="nav-item"><a href="#resume-section" class="nav-link"><span>Resume</span></a></li>
 	          <li class="nav-item"><a href="#skills-section" class="nav-link"><span>Skills</span></a></li>
 	          <li class="nav-item"><a href="#Certifications-section" class="nav-link"><span>Certifications</span></a></li>
-              <li class="nav-item"><a href="#Trainer-Hub-section" class="nav-link"><span>Trainer Hub</span></a></li>
+              <li class="nav-item"><a href="#Trainer-Hub-section" class="nav-link"><span>Training</span></a></li>
 	          <li class="nav-item"><a href="#Prizes-section" class="nav-link"><span>Prizes</span></a></li>
 	          <li class="nav-item"><a href="#blog-section" class="nav-link"><span>My Blog</span></a></li>
+			  <li class="nav-item"><a href="#testimonials-section" class="nav-link"><span>voice</span></a></li>
 	          <li class="nav-item"><a href="#contact-section" class="nav-link"><span>Contact</span></a></li>
 	        </ul>
 	      </div>
@@ -495,6 +512,10 @@
     </section>
 
 
+	<!-- Testimonials -->
+	<div id="testimonials-container"></div>
+
+	<!-- Contacte me  section -->
     <section class="ftco-section contact-section ftco-no-pb img margin-top" style="background-image: url(images/bloodlife.jpg)" id="contact-section">
       <div class="container">
       	<div class="row justify-content-center mb-5 pb-3">
@@ -571,6 +592,7 @@
         </div>
       </div>
     </section>
+
 
     <footer class="ftco-footer ftco-section">
       <div class="container">
