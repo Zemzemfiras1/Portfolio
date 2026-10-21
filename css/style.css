@@ -10016,3 +10016,127 @@ textarea.form-control {
     }
 
 }
+
+/* Publications style */
+
+/* PUBLICATION CARD */
+.publications-section .testimonial-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 35px 25px;
+    text-align: center;
+    min-height: 320px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.12);
+}
+
+.publications-section .testimonial-content {
+    width: 100%;
+}
+
+/* PAPER TITLE */
+.publications-section .testimonial-content h3 {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.5;
+    color: #222;
+    margin-bottom: 20px;
+}
+
+/* GLOBE ICON - OWN LINE */
+.publications-section .publication-link {
+    display: block;
+    text-align: center;
+    margin: 10px 0 4px;
+}
+
+.publications-section .publication-link a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffbd39;
+    font-size: 22px;
+    line-height: 1;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.publications-section .publication-link a:hover {
+    color: #e0a52e;
+}
+
+.publications-section .publication-link .icon-globe {
+    display: inline-block;
+    font-size: 22px;
+    color: #ffbd39;
+    line-height: 1;
+}
+
+/* JOURNAL NAME - LINE BELOW THE ICON */
+.publications-section .publication-journal {
+    display: block;
+    margin: 4px 0 16px;
+    color: #222;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: center;
+}
+
+/* YEAR + PUBLICATION TYPE */
+.publications-section .publication-year {
+    font-size: 13px;
+    color: #999;
+    margin: 8px 0 16px;
+    line-height: 1.5;
+}
+
+/* IMPACT FACTOR, QUARTILE, POSITION */
+.publications-section .publication-meta {
+    margin-top: 12px;
+}
+
+.publications-section .publication-meta p {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.publications-section .publication-meta strong {
+    color: #999;
+    font-weight: 700;
+}
+
+/* RESPONSIVE */
+@media (max-width: 767px) {
+    .publications-section .testimonial-card {
+        padding: 28px 20px;
+        min-height: 300px;
+    }
+
+    .publications-section .testimonial-content h3 {
+        font-size: 18px;
+        margin-bottom: 16px;
+    }
+
+    .publications-section .publication-link a,
+    .publications-section .publication-link .icon-globe {
+        font-size: 22px;
+    }
+
+    .publications-section .publication-journal {
+        font-size: 15px;
+    }
+
+    .publications-section .publication-year {
+        font-size: 13px;
+    }
+
+    .publications-section .publication-meta p {
+        font-size: 14px;
+    }
+}
