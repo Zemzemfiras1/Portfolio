@@ -1,0 +1,144 @@
+name: Review community testimonial
+
+on:
+  repository_dispatch:
+    types: [testimonial_submission]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: community-testimonial-${{ github.event.client_payload.id || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  propose-testimonial:
+    if: github.event_name == 'workflow_dispatch' || github.event.action == 'testimonial_submission'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate and append testimonial JSON
+        id: prepare
+        env:
+          EVENT_PATH: ${{ github.event_path }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const crypto = require('crypto');
+          const event = JSON.parse(fs.readFileSync(process.env.EVENT_PATH, 'utf8'));
+          const p = event.client_payload || {};
+
+          const fail = (message) => { console.error(message); process.exit(1); };
+          const required = ['id', 'name', 'position', 'country', 'message', 'submittedAt'];
+          for (const key of required) {
+            if (typeof p[key] !== 'string' || !p[key].trim()) fail(`Missing or invalid ${key}`);
+          }
+          if (!/^t-[a-f0-9]{16}$/.test(p.id)) fail('Invalid submission ID');
+          const limits = { name: 100, position: 120, organization: 120, country: 80, message: 1200, linkedinUrl: 300, submittedAt: 100 };
+          for (const [key, max] of Object.entries(limits)) {
+            const value = p[key] || '';
+            if (typeof value !== 'string' || value.length > max) fail(`Invalid ${key}`);
+          }
+          if (p.linkedinUrl) {
+            let u;
+            try { u = new URL(p.linkedinUrl); } catch { fail('Invalid LinkedIn URL'); }
+            if (u.protocol !== 'https:' || !/(^|\.)linkedin\.com$/i.test(u.hostname) || u.username || u.password) {
+              fail('Only HTTPS LinkedIn URLs are accepted');
+            }
+          }
+
+          const file = 'data/community-testimonials.json';
+          fs.mkdirSync('data', { recursive: true });
+          let records = [];
+          if (fs.existsSync(file)) {
+            try {
+              records = JSON.parse(fs.readFileSync(file, 'utf8'));
+              if (!Array.isArray(records)) fail(`${file} must contain a JSON array`);
+            } catch (err) { fail(`Cannot parse ${file}: ${err.message}`); }
+          }
+
+          // Idempotency: ignore a replayed event and exact duplicate name+message pairs.
+          const norm = s => String(s || '').normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
+          const duplicate = records.some(r =>
+            r.id === p.id ||
+            (norm(r.name) === norm(p.name) && norm(r.message) === norm(p.message))
+          );
+          if (duplicate) {
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'duplicate=true\n');
+            console.log('Duplicate testimonial; no PR required.');
+            process.exit(0);
+          }
+
+          const clean = {
+            id: p.id,
+            name: p.name.trim(),
+            position: p.position.trim(),
+            organization: (p.organization || '').trim(),
+            country: p.country.trim(),
+            message: p.message.trim(),
+            linkedinUrl: p.linkedinUrl || '',
+            submittedAt: p.submittedAt
+          };
+          records.push(clean);
+          fs.writeFileSync(file, JSON.stringify(records, null, 2) + '\n', 'utf8');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, 'duplicate=false\n');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `id=${p.id}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `name=${p.name.replace(/[\r\n]/g, ' ').slice(0, 100)}\n`);
+          NODE
+
+      - name: Stop if already present
+        if: steps.prepare.outputs.duplicate == 'true'
+        run: echo "This testimonial already exists; skipping pull request."
+
+      - name: Create branch and commit
+        if: steps.prepare.outputs.duplicate != 'true' && github.event_name == 'repository_dispatch'
+        env:
+          TESTIMONIAL_ID: ${{ steps.prepare.outputs.id }}
+        run: |
+          set -euo pipefail
+          BRANCH="testimonials/${TESTIMONIAL_ID}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add data/community-testimonials.json
+          git commit -m "Add community testimonial ${TESTIMONIAL_ID}"
+          git push --force origin "$BRANCH"
+          echo "BRANCH=$BRANCH" >> "$GITHUB_ENV"
+
+      - name: Open pull request
+        if: steps.prepare.outputs.duplicate != 'true' && github.event_name == 'repository_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TESTIMONIAL_ID: ${{ steps.prepare.outputs.id }}
+          TESTIMONIAL_NAME: ${{ steps.prepare.outputs.name }}
+        run: |
+          set -euo pipefail
+          EXISTING="$(gh pr list --state open --head "$BRANCH" --json number --jq 'length')"
+          if [ "$EXISTING" -gt 0 ]; then
+            echo "A pull request already exists for $BRANCH."
+            exit 0
+          fi
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "Review testimonial: ${TESTIMONIAL_NAME}" \
+            --body "## Community testimonial review
+
+          - Submission ID: \`${TESTIMONIAL_ID}\`
+          - Source: public Google Form
+          - [ ] Verify the content and publication consent
+          - [ ] Check spelling, identity, and LinkedIn URL
+          - [ ] Merge only if approved
+
+          The live site should display this testimonial only after this PR is merged."
+
+      - name: Manual run note
+        if: github.event_name == 'workflow_dispatch'
+        run: echo "Manual validation run complete. Submit a real Google Form response to test PR creation."
