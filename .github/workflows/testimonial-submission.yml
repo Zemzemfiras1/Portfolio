@@ -369,16 +369,24 @@ jobs:
               result = subprocess.run(
                   [
                       "gdown",
-                      "--id", file_id,
-                      "--output", str(downloaded),
+                      f"https://drive.google.com/uc?id={file_id}",
+                      "--output",
+                      str(downloaded),
                       "--no-cookies",
+                      "--retries",
+                      "3",
+                      "--timeout",
+                      "30",
                   ],
                   capture_output=True,
                   text=True,
                   timeout=120,
+                  check=False,
               )
 
               if result.returncode != 0 or not downloaded.is_file():
+                  details = (result.stderr or result.stdout or "").strip()
+
                   raise RuntimeError(
                       "Unable to download the Google Drive photo. "
                       "Check that the file is shared as "
