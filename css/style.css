@@ -10140,3 +10140,52 @@ textarea.form-control {
         font-size: 14px;
     }
 }
+
+
+/* Community testimonial social links */
+.testimonial-card .ftco-footer-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-left: 0;
+  list-style: none;
+}
+
+.testimonial-card .ftco-footer-social li {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.testimonial-card .ftco-footer-social li a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.testimonial-card .testimonial-social-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.testimonial-card .ftco-footer-social li a:hover {
+  opacity: 0.7;
+}
+
+.testimonial-card .testimonial-country {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  font-size: 20px;
+  line-height: 1;
+}
