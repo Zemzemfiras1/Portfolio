@@ -49,14 +49,57 @@
     card.className = "testimonial-card";
     item.appendChild(card);
 
+    // fix uploaded testimonil img url vs default
+
     const imageWrap = document.createElement("div");
     imageWrap.className = "testimonial-img";
+    
     const img = document.createElement("img");
-    img.src = AVATAR_URL;
-    img.alt = "Default avatar for " + t.name;
+    
+    // Use the submitted photo when it is a valid HTTPS Google Drive URL.
+    function getProfileImageUrl(value) {
+      if (typeof value !== "string" || !value.trim()) {
+        return AVATAR_URL;
+      }
+    
+      try {
+        const url = new URL(value.trim());
+    
+        const validDriveUrl =
+          url.protocol === "https:" &&
+          url.hostname === "drive.google.com" &&
+          !url.username &&
+          !url.password &&
+          !url.port &&
+          url.pathname === "/uc" &&
+          url.searchParams.get("export") === "view" &&
+          /^[a-zA-Z0-9_-]+$/.test(
+            url.searchParams.get("id") || ""
+          ) &&
+          [...url.searchParams.keys()].every(
+            key => ["export", "id"].includes(key)
+          ) &&
+          !url.hash;
+    
+        return validDriveUrl ? url.href : AVATAR_URL;
+      } catch {
+        return AVATAR_URL;
+      }
+    }
+    
+    img.src = getProfileImageUrl(t.imageUrl);
+    img.alt = "Profile photo of " + t.name;
     img.loading = "lazy";
+    img.onerror = function () {
+      // Fall back to the default avatar if the uploaded image
+      // cannot be loaded or accessed.
+      img.onerror = null;
+      img.src = AVATAR_URL;
+    };
+    
     imageWrap.appendChild(img);
     card.appendChild(imageWrap);
+
 
     const content = document.createElement("div");
     content.className = "testimonial-content";
