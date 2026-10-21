@@ -1,3 +1,4 @@
+
 name: Review community testimonial
 
 on:
@@ -15,67 +16,186 @@ concurrency:
 
 jobs:
   propose-testimonial:
-    if: github.event_name == 'workflow_dispatch' || github.event.action == 'testimonial_submission'
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.action == 'testimonial_submission'
     runs-on: ubuntu-latest
     steps:
       - name: Check out main
+        if: github.event_name == 'repository_dispatch'
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
 
-      - name: Validate and append testimonial JSON
+      - name: Validate and prepare testimonial
         id: prepare
+        if: github.event_name == 'repository_dispatch'
         env:
           EVENT_PATH: ${{ github.event_path }}
+        shell: bash
         run: |
+          set -euo pipefail
+
           node <<'NODE'
           const fs = require('fs');
-          const crypto = require('crypto');
-          const event = JSON.parse(fs.readFileSync(process.env.EVENT_PATH, 'utf8'));
-          const p = event.client_payload || {};
 
-          const fail = (message) => { console.error(message); process.exit(1); };
-          const required = ['id', 'name', 'position', 'country', 'message', 'submittedAt'];
+          const fail = (message) => {
+            console.error(message);
+            process.exit(1);
+          };
+
+          let event;
+
+          try {
+            event = JSON.parse(
+              fs.readFileSync(process.env.EVENT_PATH, 'utf8')
+            );
+          } catch {
+            fail('Unable to read the GitHub event payload.');
+          }
+
+          if (event.action !== 'testimonial_submission') {
+            fail('Unexpected repository_dispatch event type.');
+          }
+
+          const p = event.client_payload;
+
+          if (!p || typeof p !== 'object' || Array.isArray(p)) {
+            fail('Missing or invalid client_payload.');
+          }
+
+          const required = [
+            'id',
+            'name',
+            'position',
+            'country',
+            'message',
+            'submittedAt'
+          ];
+
           for (const key of required) {
-            if (typeof p[key] !== 'string' || !p[key].trim()) fail(`Missing or invalid ${key}`);
-          }
-          if (!/^t-[a-f0-9]{16}$/.test(p.id)) fail('Invalid submission ID');
-          const limits = { name: 100, position: 120, organization: 120, country: 80, message: 1200, linkedinUrl: 300, submittedAt: 100 };
-          for (const [key, max] of Object.entries(limits)) {
-            const value = p[key] || '';
-            if (typeof value !== 'string' || value.length > max) fail(`Invalid ${key}`);
-          }
-          if (p.linkedinUrl) {
-            let u;
-            try { u = new URL(p.linkedinUrl); } catch { fail('Invalid LinkedIn URL'); }
-            if (u.protocol !== 'https:' || !/(^|\.)linkedin\.com$/i.test(u.hostname) || u.username || u.password) {
-              fail('Only HTTPS LinkedIn URLs are accepted');
+            if (
+              typeof p[key] !== 'string' ||
+              !p[key].trim()
+            ) {
+              fail(`Missing or invalid ${key}.`);
             }
           }
 
-          const file = 'data/community-testimonials.json';
-          fs.mkdirSync('data', { recursive: true });
-          let records = [];
-          if (fs.existsSync(file)) {
-            try {
-              records = JSON.parse(fs.readFileSync(file, 'utf8'));
-              if (!Array.isArray(records)) fail(`${file} must contain a JSON array`);
-            } catch (err) { fail(`Cannot parse ${file}: ${err.message}`); }
+          // Apps Script generates 8 digest bytes = 16 hex characters.
+          if (!/^t-[a-f0-9]{16}$/i.test(p.id)) {
+            fail('Invalid submission ID.');
           }
 
-          // Idempotency: ignore a replayed event and exact duplicate name+message pairs.
-          const norm = s => String(s || '').normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
-          const duplicate = records.some(r =>
-            r.id === p.id ||
-            (norm(r.name) === norm(p.name) && norm(r.message) === norm(p.message))
+          const limits = {
+            name: 100,
+            position: 120,
+            organization: 120,
+            country: 80,
+            message: 1200,
+            linkedinUrl: 300,
+            githubUrl: 300,
+            submittedAt: 100
+          };
+
+          for (const [key, max] of Object.entries(limits)) {
+            const value = p[key] ?? '';
+
+            if (typeof value !== 'string') {
+              fail(`Invalid ${key}: expected a string.`);
+            }
+
+            if (value.length > max) {
+              fail(`Invalid ${key}: maximum ${max} characters.`);
+            }
+          }
+
+          const validateProfile = (value, domain, label) => {
+            if (!value) return;
+
+            let url;
+
+            try {
+              url = new URL(value);
+            } catch {
+              fail(`Invalid ${label} URL.`);
+            }
+
+            if (
+              url.protocol !== 'https:' ||
+              !(
+                url.hostname.toLowerCase() === domain ||
+                url.hostname.toLowerCase().endsWith('.' + domain)
+              ) ||
+              url.username ||
+              url.password ||
+              url.port
+            ) {
+              fail(`Only valid HTTPS ${label} profile URLs are accepted.`);
+            }
+          };
+
+          validateProfile(p.linkedinUrl || '', 'linkedin.com', 'LinkedIn');
+          validateProfile(p.githubUrl || '', 'github.com', 'GitHub');
+
+          const file = 'data/community-testimonials.json';
+
+          fs.mkdirSync('data', { recursive: true });
+
+          let records = [];
+
+          if (fs.existsSync(file)) {
+            try {
+              records = JSON.parse(
+                fs.readFileSync(file, 'utf8')
+              );
+            } catch (err) {
+              fail(`Cannot parse ${file}: ${err.message}`);
+            }
+
+            if (!Array.isArray(records)) {
+              fail(`${file} must contain a JSON array.`);
+            }
+
+            for (const record of records) {
+              if (
+                !record ||
+                typeof record !== 'object' ||
+                Array.isArray(record)
+              ) {
+                fail(`${file} contains an invalid record.`);
+              }
+            }
+          }
+
+          // Ignore replayed IDs and exact normalized name/message duplicates.
+          const normalize = (s) =>
+            String(s || '')
+              .normalize('NFKC')
+              .toLowerCase()
+              .replace(/\s+/g, ' ')
+              .trim();
+
+          const duplicate = records.some((record) =>
+            record.id === p.id ||
+            (
+              normalize(record.name) === normalize(p.name) &&
+              normalize(record.message) === normalize(p.message)
+            )
           );
+
           if (duplicate) {
-            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'duplicate=true\n');
-            console.log('Duplicate testimonial; no PR required.');
+            fs.appendFileSync(
+              process.env.GITHUB_OUTPUT,
+              'duplicate=true\n'
+            );
+
+            console.log('Duplicate testimonial; skipping PR.');
             process.exit(0);
           }
 
+          // Store only the expected public testimonial fields.
           const clean = {
             id: p.id,
             name: p.name.trim(),
@@ -84,61 +204,117 @@ jobs:
             country: p.country.trim(),
             message: p.message.trim(),
             linkedinUrl: p.linkedinUrl || '',
-            submittedAt: p.submittedAt
+            githubUrl: p.githubUrl || '',
+            submittedAt: p.submittedAt.trim()
           };
+
           records.push(clean);
-          fs.writeFileSync(file, JSON.stringify(records, null, 2) + '\n', 'utf8');
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, 'duplicate=false\n');
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `id=${p.id}\n`);
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `name=${p.name.replace(/[\r\n]/g, ' ').slice(0, 100)}\n`);
+
+          fs.writeFileSync(
+            file,
+            JSON.stringify(records, null, 2) + '\n',
+            'utf8'
+          );
+
+          const safeName = clean.name.replace(/[\r\n]/g, ' ');
+
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            'duplicate=false\n' +
+            `id=${clean.id}\n` +
+            `name=${safeName}\n`
+          );
+
+          console.log(`Prepared testimonial ${clean.id}.`);
           NODE
 
       - name: Stop if already present
-        if: steps.prepare.outputs.duplicate == 'true'
-        run: echo "This testimonial already exists; skipping pull request."
+        if: >-
+          github.event_name == 'repository_dispatch' &&
+          steps.prepare.outputs.duplicate == 'true'
+        run: echo "Testimonial already exists; no pull request needed."
 
       - name: Create branch and commit
-        if: steps.prepare.outputs.duplicate != 'true' && github.event_name == 'repository_dispatch'
+        if: >-
+          github.event_name == 'repository_dispatch' &&
+          steps.prepare.outputs.duplicate == 'false'
         env:
           TESTIMONIAL_ID: ${{ steps.prepare.outputs.id }}
+        shell: bash
         run: |
           set -euo pipefail
+
           BRANCH="testimonials/${TESTIMONIAL_ID}"
+
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
           git checkout -B "$BRANCH"
+
           git add data/community-testimonials.json
+
           git commit -m "Add community testimonial ${TESTIMONIAL_ID}"
+
+          # This branch is dedicated to this submission ID.
           git push --force origin "$BRANCH"
+
           echo "BRANCH=$BRANCH" >> "$GITHUB_ENV"
 
       - name: Open pull request
-        if: steps.prepare.outputs.duplicate != 'true' && github.event_name == 'repository_dispatch'
+        if: >-
+          github.event_name == 'repository_dispatch' &&
+          steps.prepare.outputs.duplicate == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
           TESTIMONIAL_ID: ${{ steps.prepare.outputs.id }}
           TESTIMONIAL_NAME: ${{ steps.prepare.outputs.name }}
+        shell: bash
         run: |
           set -euo pipefail
-          EXISTING="$(gh pr list --state open --head "$BRANCH" --json number --jq 'length')"
+
+          BRANCH="testimonials/${TESTIMONIAL_ID}"
+
+          EXISTING="$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --state open \
+            --head "$BRANCH" \
+            --base main \
+            --json number \
+            --jq 'length')"
+
           if [ "$EXISTING" -gt 0 ]; then
-            echo "A pull request already exists for $BRANCH."
+            echo "An open pull request already exists for $BRANCH."
             exit 0
           fi
+
           gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
             --base main \
             --head "$BRANCH" \
             --title "Review testimonial: ${TESTIMONIAL_NAME}" \
-            --body "## Community testimonial review
+            --body "$(cat <<EOF
+          ## Community testimonial review
 
           - Submission ID: \`${TESTIMONIAL_ID}\`
           - Source: public Google Form
-          - [ ] Verify the content and publication consent
-          - [ ] Check spelling, identity, and LinkedIn URL
-          - [ ] Merge only if approved
 
-          The live site should display this testimonial only after this PR is merged."
+          ### Review checklist
+
+          - [ ] Verify the testimonial and publication consent.
+          - [ ] Check spelling and content.
+          - [ ] Review the submitted profile URLs.
+          - [ ] Confirm the testimonial is appropriate for publication.
+
+          **Do not merge until the submission is approved.**
+
+          The live website should display this testimonial only after this PR is merged.
+          EOF
+          )"
 
       - name: Manual run note
         if: github.event_name == 'workflow_dispatch'
-        run: echo "Manual validation run complete. Submit a real Google Form response to test PR creation."
+        run: |
+          echo "Manual workflow run completed."
+          echo "No testimonial was created or published."
+          echo "Submit a Google Form response to test the full flow."
