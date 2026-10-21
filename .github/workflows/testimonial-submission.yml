@@ -1,4 +1,3 @@
-```yaml
 name: Review community testimonial
 
 on:
@@ -402,4 +401,3 @@ jobs:
           echo "Manual workflow run completed."
           echo "No testimonial was created or published."
           echo "Submit a Google Form response to test the full flow."
-```
