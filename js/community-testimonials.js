@@ -8,6 +8,7 @@
  *     https://drive.google.com/uc?export=view&id=...
  *
  * User-controlled text is rendered with textContent, never innerHTML.
+ * Markup mirrors the hand-written testimonial cards in index.html.
  */
 
 (function () {
@@ -15,7 +16,6 @@
 
   const DATA_URL = "data/community-testimonials.json";
   const AVATAR_URL = "images/testimonial/default-avatar.svg";
-  const SVG_NS = "http://www.w3.org/2000/svg";
 
   const section = document.querySelector("#testimonials-section");
   const carousel = section?.querySelector(".testimonial-carousel");
@@ -27,113 +27,58 @@
   carousel.dataset.testimonialsInitialized = "true";
 
   const COUNTRY_CODES = {
-    "tunisia": "TN",
-    "tunisie": "TN",
-    "tn": "TN",
-    "rwanda": "RW",
-    "rw": "RW",
-    "united states": "US",
-    "united states of america": "US",
-    "usa": "US",
-    "us": "US",
-    "united kingdom": "GB",
-    "uk": "GB",
-    "gb": "GB",
-    "france": "FR",
-    "fr": "FR",
-    "germany": "DE",
-    "de": "DE",
-    "italy": "IT",
-    "it": "IT",
-    "spain": "ES",
-    "es": "ES",
-    "canada": "CA",
-    "ca": "CA",
-    "india": "IN",
-    "in": "IN",
-    "nigeria": "NG",
-    "ng": "NG",
-    "kenya": "KE",
-    "ke": "KE",
-    "south africa": "ZA",
-    "za": "ZA",
-    "morocco": "MA",
-    "ma": "MA",
-    "algeria": "DZ",
-    "dz": "DZ",
-    "egypt": "EG",
-    "eg": "EG",
-    "senegal": "SN",
-    "sn": "SN",
-    "cameroon": "CM",
-    "cm": "CM",
-    "uganda": "UG",
-    "ug": "UG",
-    "ethiopia": "ET",
-    "et": "ET",
-    "brazil": "BR",
-    "br": "BR",
-    "japan": "JP",
-    "jp": "JP",
-    "china": "CN",
-    "cn": "CN",
-    "australia": "AU",
-    "au": "AU",
-    "switzerland": "CH",
-    "ch": "CH",
-    "belgium": "BE",
-    "be": "BE",
-    "netherlands": "NL",
-    "nl": "NL",
-    "sweden": "SE",
-    "se": "SE",
-    "norway": "NO",
-    "no": "NO",
-    "finland": "FI",
-    "fi": "FI",
-    "ireland": "IE",
-    "ie": "IE",
-    "portugal": "PT",
-    "pt": "PT",
-    "poland": "PL",
-    "pl": "PL",
-    "turkey": "TR",
-    "türkiye": "TR",
-    "tr": "TR",
-    "pakistan": "PK",
-    "pk": "PK",
-    "bangladesh": "BD",
-    "bd": "BD",
-    "indonesia": "ID",
-    "id": "ID",
-    "malaysia": "MY",
-    "my": "MY",
-    "singapore": "SG",
-    "sg": "SG",
-    "new zealand": "NZ",
-    "nz": "NZ",
-    "mexico": "MX",
-    "mx": "MX",
-    "argentina": "AR",
-    "ar": "AR",
-    "colombia": "CO",
-    "co": "CO",
-    "ghana": "GH",
-    "gh": "GH",
-    "ivory coast": "CI",
-    "côte d’ivoire": "CI",
-    "côte d'ivoire": "CI",
-    "cote d'ivoire": "CI",
-    "ci": "CI"
+    "tunisia": "TN", "tunisie": "TN", "tn": "TN",
+    "rwanda": "RW", "rw": "RW",
+    "united states": "US", "united states of america": "US", "usa": "US", "us": "US",
+    "united kingdom": "GB", "uk": "GB", "gb": "GB",
+    "france": "FR", "fr": "FR",
+    "germany": "DE", "de": "DE",
+    "italy": "IT", "it": "IT",
+    "spain": "ES", "es": "ES",
+    "canada": "CA", "ca": "CA",
+    "india": "IN", "in": "IN",
+    "nigeria": "NG", "ng": "NG",
+    "kenya": "KE", "ke": "KE",
+    "south africa": "ZA", "za": "ZA",
+    "morocco": "MA", "ma": "MA",
+    "algeria": "DZ", "dz": "DZ",
+    "egypt": "EG", "eg": "EG",
+    "senegal": "SN", "sn": "SN",
+    "cameroon": "CM", "cm": "CM",
+    "uganda": "UG", "ug": "UG",
+    "ethiopia": "ET", "et": "ET",
+    "brazil": "BR", "br": "BR",
+    "japan": "JP", "jp": "JP",
+    "china": "CN", "cn": "CN",
+    "australia": "AU", "au": "AU",
+    "switzerland": "CH", "ch": "CH",
+    "belgium": "BE", "be": "BE",
+    "netherlands": "NL", "nl": "NL",
+    "sweden": "SE", "se": "SE",
+    "norway": "NO", "no": "NO",
+    "finland": "FI", "fi": "FI",
+    "ireland": "IE", "ie": "IE",
+    "portugal": "PT", "pt": "PT",
+    "poland": "PL", "pl": "PL",
+    "turkey": "TR", "türkiye": "TR", "tr": "TR",
+    "pakistan": "PK", "pk": "PK",
+    "bangladesh": "BD", "bd": "BD",
+    "indonesia": "ID", "id": "ID",
+    "malaysia": "MY", "my": "MY",
+    "singapore": "SG", "sg": "SG",
+    "new zealand": "NZ", "nz": "NZ",
+    "mexico": "MX", "mx": "MX",
+    "argentina": "AR", "ar": "AR",
+    "colombia": "CO", "co": "CO",
+    "ghana": "GH", "gh": "GH",
+    "ivory coast": "CI", "côte d’ivoire": "CI",
+    "côte d'ivoire": "CI", "cote d'ivoire": "CI", "ci": "CI"
   };
 
-  // SVG path data for social icons. No icon font is required.
-  const SOCIAL_ICONS = {
-    "linkedin.com":
-      "M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.26 2.37 4.26 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0Z",
-
-    "github.com":
-      "M12 .8a11.2 11.2 0 0 0-3.54 21.83c.56.1.76-.24.76-.54v-2.1c-3.1.67-3.76-1.32-3.76-1.32-.51-1.3-1.24-1.65-1.24-1.65-1.01-.7.08-.69.08-.69 1.12.08 1.71 1.15 1.71 1.15.99 1.7 2.6 1.21 3.23.92.1-.72.39-1.21.7-1.49-2.47-.28-5.07-1.24-5.07-5.52 0-1.22.44-2.21 1.15-2.99-.12-.28-.5-1.42.11-2.95 0 0 .94-.3 3.08 1.14a10.7 10.7 0 0 1 5.6 0c2.14-1.44 3.08-1.14 3.08-1.14.61 1.53.23 2.67.11 2.95.72.78 1.15 1.77 1.15 2.99 0 4.29-2.6 5.23-5.08 5.51.4.35.75 1.03.75 2.08v3.1c0 .3.2.65.77.54A11.2 11.2 0 0 0 12 .8Z"
+  // Icon-font classes already styled by the site theme.
+  const ICON_CLASSES = {
+    "linkedin.com": "icon-linkedin",
+    "github.com": "icon-github"
   };
 
   function addTextElement(parent, tag, className, value) {
@@ -176,38 +121,16 @@
     }
   }
 
-  function createSocialIcon(domain) {
-    const pathData = SOCIAL_ICONS[domain];
-
-    if (!pathData) return null;
-
-    const svg = document.createElementNS(SVG_NS, "svg");
-    svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("width", "20");
-    svg.setAttribute("height", "20");
-    svg.setAttribute("fill", "currentColor");
-    svg.setAttribute("aria-hidden", "true");
-    svg.setAttribute("focusable", "false");
-    svg.classList.add("testimonial-social-icon");
-
-    const path = document.createElementNS(SVG_NS, "path");
-    path.setAttribute("d", pathData);
-    svg.appendChild(path);
-
-    return svg;
-  }
-
+  // NOTE: no "ftco-animate" class on dynamic items. That class starts at
+  // opacity 0 and is only revealed by main.js for elements present at page
+  // load, so dynamically added items would stay invisible.
   function addExternalLink(list, value, domain, label) {
     const safeUrl = getSafeProfileUrl(value, domain);
+    const iconClass = ICON_CLASSES[domain];
 
-    if (!safeUrl) return;
-
-    const icon = createSocialIcon(domain);
-
-    if (!icon) return;
+    if (!safeUrl || !iconClass) return;
 
     const item = document.createElement("li");
-    item.className = "ftco-animate";
 
     const link = document.createElement("a");
     link.href = safeUrl;
@@ -215,6 +138,10 @@
     link.rel = "noopener noreferrer";
     link.setAttribute("aria-label", label);
     link.title = label;
+
+    const icon = document.createElement("span");
+    icon.className = iconClass;
+    icon.setAttribute("aria-hidden", "true");
 
     link.appendChild(icon);
     item.appendChild(link);
@@ -226,12 +153,12 @@
       return "";
     }
 
-    const normalized = country.trim().toLowerCase();
-    let code = COUNTRY_CODES[normalized];
+    const trimmed = country.trim();
+    let code = COUNTRY_CODES[trimmed.toLowerCase()];
 
-    // Also support two-letter country codes, such as TN and RW.
-    if (!code && /^[a-z]{2}$/i.test(country.trim())) {
-      code = country.trim().toUpperCase();
+    // Also support any two-letter country code.
+    if (!code && /^[a-z]{2}$/i.test(trimmed)) {
+      code = trimmed.toUpperCase();
     }
 
     if (!code || !/^[A-Z]{2}$/.test(code)) {
@@ -239,22 +166,17 @@
     }
 
     return String.fromCodePoint(
-      ...Array.from(code, character =>
-        127397 + character.charCodeAt(0)
-      )
+      ...Array.from(code, character => 127397 + character.charCodeAt(0))
     );
   }
 
   function addCountry(list, country) {
-    if (typeof country !== "string" || !country.trim()) {
-      return;
-    }
+    if (typeof country !== "string" || !country.trim()) return;
 
     const name = country.trim();
     const flag = getCountryFlag(name);
 
     const item = document.createElement("li");
-    item.className = "ftco-animate";
 
     const countryElement = document.createElement("span");
     countryElement.className = "testimonial-country";
@@ -275,16 +197,14 @@
 
     const imagePath = value.trim();
 
-    // Only accept local testimonial images with the expected filename format.
+    // Local testimonial images with the expected filename format.
     if (
-      /^images\/testimonial\/t-[a-f0-9]{16}\.(?:jpg|png|webp)$/i.test(
-        imagePath
-      )
+      /^images\/testimonial\/t-[a-f0-9]{16}\.(?:jpg|png|webp)$/i.test(imagePath)
     ) {
       return imagePath;
     }
 
-    // Support legacy Google Drive image URLs.
+    // Legacy Google Drive image URLs.
     try {
       const url = new URL(imagePath);
 
@@ -296,11 +216,9 @@
         !url.port &&
         url.pathname === "/uc" &&
         url.searchParams.get("export") === "view" &&
-        /^[a-zA-Z0-9_-]+$/.test(
-          url.searchParams.get("id") || ""
-        ) &&
-        [...url.searchParams.keys()].every(
-          key => ["export", "id"].includes(key)
+        /^[a-zA-Z0-9_-]+$/.test(url.searchParams.get("id") || "") &&
+        [...url.searchParams.keys()].every(key =>
+          ["export", "id"].includes(key)
         ) &&
         !url.hash;
 
@@ -354,7 +272,7 @@
       content,
       "p",
       "testimonial-text",
-      "“" + testimonial.message + "”"
+      "\u201C" + testimonial.message + "\u201D"
     );
 
     // Social row: LinkedIn | Country | GitHub.
@@ -386,19 +304,10 @@
 
     addTextElement(person, "h3", "", testimonial.name);
 
-    const positionParts = [
-      testimonial.position,
-      testimonial.organization
-    ].filter(value =>
-      typeof value === "string" && value.trim()
-    );
+    const positionParts = [testimonial.position, testimonial.organization]
+      .filter(value => typeof value === "string" && value.trim());
 
-    addTextElement(
-      person,
-      "span",
-      "position",
-      positionParts.join(" · ")
-    );
+    addTextElement(person, "span", "position", positionParts.join(" \u00B7 "));
 
     card.appendChild(person);
 
@@ -409,8 +318,7 @@
     .then(response => {
       if (!response.ok) {
         throw new Error(
-          "Could not load community testimonials (HTTP " +
-          response.status + ")"
+          "Could not load community testimonials (HTTP " + response.status + ")"
         );
       }
 
@@ -421,9 +329,7 @@
         return;
       }
 
-      const $carousel = window.jQuery
-        ? window.jQuery(carousel)
-        : null;
+      const $carousel = window.jQuery ? window.jQuery(carousel) : null;
 
       const owlReady = Boolean(
         $carousel &&
