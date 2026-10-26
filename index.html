@@ -910,10 +910,136 @@
 		</div>
 	</section>
 
+  <!-- ==========================================
+         COLLABORATION MEETING BOOKING WIDGET
+       ========================================== -->
 
-	<!-- Footer  section -->
-    <footer class="ftco-footer ftco-section">
-      <div class="container">
+  <!-- STICKY SIDE TAB -->
+  <div id="collabWidget" class="collab-widget">
+
+    <!-- Main Collaboration Button -->
+    <button
+      id="collabTab"
+	  class="collab-sticky-tab"
+      type="button"
+      aria-label="Schedule a collaboration meeting"
+      aria-haspopup="dialog"
+      aria-controls="collabOverlay"
+    >
+      <span class="collab-tab-icon" aria-hidden="true">🤝</span>
+      <span>Let's Collaborate</span>
+    </button>
+
+    <!-- Collapse Triangle Button -->
+    <button
+      id="collabDismiss"
+      class="collab-dismiss"
+      type="button"
+      aria-label="Collapse collaboration tab"
+      title="Hide collaboration tab"
+    >
+      &#9664;
+    </button>
+  </div>
+
+
+  <!-- EXPAND BUTTON (VISIBLE WHEN COLLAPSED) -->
+
+  <button
+    id="collabRestore"
+    class="collab-restore"
+    type="button"
+    aria-label="Expand collaboration tab"
+    title="Show collaboration tab"
+    hidden
+  >
+    &#9654;
+  </button>
+
+
+  <!-- COLLABORATION BOOKING POPUP  -->
+
+  <div
+    id="collabOverlay"
+    class="collab-overlay"
+    aria-hidden="true"
+  >
+    <div
+      class="collab-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="collabTitle"
+      aria-describedby="collabDescription"
+      tabindex="-1"
+      >
+      <!-- Close Booking Popup -->
+      <button
+        id="collabClose"
+        class="collab-close"
+        type="button"
+        aria-label="Close booking popup"
+        title="Close"
+      >
+        &times;
+      </button>
+
+      <!-- Popup Header -->
+      <div class="collab-header">
+
+        <!-- Collaboration Badge -->
+        <span class="collab-badge">
+          OPEN FOR COLLABORATION
+        </span>
+
+        <!-- Title -->
+        <h2 id="collabTitle">
+          Let's Collaborate!
+        </h2>
+
+        <!-- Description -->
+        <p id="collabDescription">
+          Interested in bioinformatics, genomics,
+          computational biology, or interdisciplinary research?
+
+          Schedule a 45-minute meeting to discuss
+          potential collaborations, research projects,
+          and innovative ideas.
+        </p>
+
+        <!-- Meeting Information -->
+        <div class="collab-info">
+
+          <span>
+            ⏱ 45 Minutes
+          </span>
+
+          <span>
+            🌍 Online Meeting
+          </span>
+        </div>
+      </div>
+
+
+      <!-- CALENDLY BOOKING CALENDAR  -->
+
+      <div class="collab-calendar">
+        <iframe
+          id="collabCalendar"
+          title="Schedule a 45-minute collaboration meeting"
+          data-src="https://calendly.com/zemzemfiras/30min"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+	  </div>
+    </div>
+  </div>
+
+  <!-- END COLLABORATION BOOKING WIDGET  -->
+
+
+  <!-- Footer  section -->
+  	<footer class="ftco-footer ftco-section">
+	  <div class="container">
         <div class="row mb-5">
           <div class="col-md">
             <div class="ftco-footer-widget mb-4">
@@ -960,7 +1086,7 @@
           </div>
         </div>
 	  </div>
-    </footer>
+  	</footer>
     
   
 
